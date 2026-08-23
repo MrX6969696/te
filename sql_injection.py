@@ -18,14 +18,12 @@ async def search_user(username: str):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # CRITICAL BUG: SQL Injection Vulnerability
-        # String concatenation allows arbitrary SQL execution if 'username' contains malicious payloads
-        query = f"SELECT id, username, email, role FROM users WHERE username = '{username}'"
+        query = "SELECT id, username, email, role FROM users WHERE username = ?"
         
         # Log the query for debugging (Simulating a real backend log)
         print(f"Executing Query: {query}")
         
-        cursor.execute(query)
+        cursor.execute(query, (username,))
         user = cursor.fetchone()
         conn.close()
         
@@ -34,6 +32,8 @@ async def search_user(username: str):
             
         return dict(user)
         
+    except HTTPException:
+        raise
     except Exception as e:
         # Generic error catching that might mask the SQL syntax errors from injections
         raise HTTPException(status_code=500, detail=str(e))
